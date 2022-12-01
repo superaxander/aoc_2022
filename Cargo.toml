@@ -1,0 +1,15 @@
+[package]
+name = "aoc_2022"
+version = "0.1.0"
+authors = ["Alexander Stekelenburg <anoniem.axander@gmail.com>"]
+edition = "2021"
+
+[profile.release]
+debug = true
+
+[dependencies]
+log = "0.4.17"
+pretty_env_logger = "0.4.0"
+regex = "1.7.0"
+superluminal-perf = "0.1.1"
+mimalloc = {version = "0.1.32", default-features = false}
