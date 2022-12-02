@@ -19,6 +19,6 @@ fn main() {
     pretty_env_logger::init();
     let now = Instant::now();
     Day::CombinedLong(day1::main).run("day 1");
-    Day::SeparatedLong(day2::main).run("day 2");
+    Day::CombinedLong(day2::main).run("day 2");
     info!("All days together took {:#?}", now.elapsed());
 }
