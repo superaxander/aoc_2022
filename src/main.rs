@@ -15,6 +15,7 @@ mod common;
 mod day1;
 mod day2;
 mod day3;
+mod day4;
 
 fn main() {
     pretty_env_logger::init();
@@ -22,5 +23,6 @@ fn main() {
     Day::CombinedLong(day1::main).run("day 1");
     Day::CombinedLong(day2::main).run("day 2");
     Day::CombinedLong(day3::main).run("day 3");
+    Day::CombinedLong(day4::main).run("day 4");
     info!("All days together took {:#?}", now.elapsed());
 }
