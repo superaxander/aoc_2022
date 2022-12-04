@@ -1,8 +1,8 @@
-use std::io;
+use anyhow::Result;
 
 use crate::common;
 
-pub fn main() -> io::Result<(i64, i64)> {
+pub fn main() -> Result<(i64, i64)> {
     // One-liner:
     // let solution_b = BufReader::new(File::open("inputs/1.txt")?).lines().map(Result::unwrap).collect::<Vec<String>>().split(String::is_empty).map(|e|e.iter().map(|l|l.parse::<i64>().unwrap()).sum::<i64>()).collect::<BinaryHeap<_>>().drain_sorted().take(3).sum());
 

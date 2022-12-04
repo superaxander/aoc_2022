@@ -2,9 +2,10 @@ use core::convert::AsRef;
 use core::result::Result::Ok;
 use std::fs::File;
 use std::io;
-use std::io::{BufRead, BufReader, Result};
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::time::Instant;
+use anyhow::Result;
 
 pub fn read_lines<P>(filename: P) -> Result<io::Lines<BufReader<File>>>
     where
@@ -15,13 +16,13 @@ pub fn read_lines<P>(filename: P) -> Result<io::Lines<BufReader<File>>>
 }
 
 pub enum Day {
-    Combined(fn() -> io::Result<(i32, i32)>),
-    CombinedUsize(fn() -> io::Result<(usize, usize)>),
-    CombinedLong(fn() -> io::Result<(i64, i64)>),
-    Separated(fn(bool) -> io::Result<i32>),
-    SeparatedLong(fn(bool) -> io::Result<i64>),
-    SeparatedUsize(fn(bool) -> io::Result<usize>),
-    SeparatedULong(fn(bool) -> io::Result<u64>),
+    Combined(fn() -> Result<(i32, i32)>),
+    CombinedUsize(fn() -> Result<(usize, usize)>),
+    CombinedLong(fn() -> Result<(i64, i64)>),
+    Separated(fn(bool) -> Result<i32>),
+    SeparatedLong(fn(bool) -> Result<i64>),
+    SeparatedUsize(fn(bool) -> Result<usize>),
+    SeparatedULong(fn(bool) -> Result<u64>),
 }
 
 pub(crate) trait Runnable {

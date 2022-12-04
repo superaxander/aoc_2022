@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::io;
+use anyhow::Result;
 
 use crate::common;
 
@@ -11,7 +11,7 @@ fn value(char: char) -> i64 {
     }
 }
 
-pub fn main() -> io::Result<(i64, i64)> {
+pub fn main() -> Result<(i64, i64)> {
     let lines = common::read_lines("inputs/3.txt")?;
     let mut solution_a = 0;
     let mut solution_b = 0;
