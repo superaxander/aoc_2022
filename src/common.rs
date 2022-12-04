@@ -7,8 +7,8 @@ use std::path::Path;
 use std::time::Instant;
 
 pub fn read_lines<P>(filename: P) -> Result<io::Lines<BufReader<File>>>
-where
-    P: AsRef<Path>,
+    where
+        P: AsRef<Path>,
 {
     let file = File::open(filename)?;
     Ok(BufReader::new(file).lines())
