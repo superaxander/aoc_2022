@@ -8,51 +8,29 @@ pub fn main() -> Result<(String, String)> {
     let mut columns_a: Vec<Vec<String>> = Vec::new();
     let mut columns_b: Vec<Vec<String>> = Vec::new();
 
-    let mut command_mode = false;
+    let mut parse_commands = false;
     for line in lines {
         let line = line?;
-        if command_mode {
+        if parse_commands {
             let (count, loc) = line[5..].split_once(" from ").expect("Invalid_string format");
             let (src, dst) = loc.split_once(" to ").expect("Invalid string format");
             let count = count.parse::<usize>()?;
             let src = src.parse::<usize>()? - 1;
             let dst = dst.parse::<usize>()? - 1;
 
+            // Part a
             for _ in 0..count {
-                // Take top-most element
-                let element = columns_a[src].iter_mut().find(|s| !s.trim().is_empty()).expect("Column empty");
-                let string = element.to_owned();
-                *element = "   ".to_owned();
-
-                // Find bottom-most empty space
-                if let Some(element) = columns_a[dst].iter_mut().filter(|s| s.trim().is_empty()).last() {
-                    *element = string;
-                } else {
-                    columns_a[dst].insert(0, string);
-                }
+                let value = columns_a[src].pop().expect("Column was empty");
+                columns_a[dst].push(value);
             }
-
-            // Take top-most elements
-            let src_elements = columns_b[src].iter_mut().filter(|s| !s.trim().is_empty()).take(count).collect::<Vec<&mut String>>();
-            let mut elements = Vec::new();
-            for element in src_elements {
-                elements.push(element.to_owned());
-                *element = "   ".to_owned();
-            }
-
-            // Find bottom-most empty spaces
-            let mut dst_elements = columns_b[dst].iter_mut().filter(|s| s.trim().is_empty()).rev().take(count).collect::<Vec<&mut String>>();
-            let expansion_size = count - dst_elements.len();
-            for (i, element) in dst_elements.iter_mut().rev().enumerate() {
-                **element = elements[i + expansion_size].to_owned();
-            }
-            // Expand columns if necessary
-            for i in (0..expansion_size).rev() {
-                columns_b[dst].insert(0, elements[i].to_owned());
-            }
+            
+            // Part b
+            let split_index = columns_b[src].len() - count;
+            let src_elements = columns_b[src].split_off(split_index);
+            columns_b[dst].extend(src_elements);
         } else if line.is_empty() {
-            command_mode = true;
-            columns_a.iter_mut().for_each(|c| { c.pop(); });
+            parse_commands = true;
+            columns_a.iter_mut().for_each(|c| { c.pop(); c.reverse(); });
             columns_b = columns_a.clone();
         } else {
             let width = (line.len() + 1) / 4;
@@ -63,16 +41,20 @@ pub fn main() -> Result<(String, String)> {
                     left = &r[1..];
                 }
                 if i < columns_a.len() {
-                    columns_a[i].push(l.to_owned());
-                } else {
+                    if !l.trim().is_empty() {
+                        columns_a[i].push(l.to_owned());
+                    }
+                } else if l.trim().is_empty() {
+                    columns_a.push(vec![])
+                }else {
                     columns_a.push(vec![l.to_owned()])
                 }
             }
         }
     }
 
-    let solution_a = columns_a.iter().map(|c| &c.iter().find(|s| !s.trim().is_empty()).unwrap()[1..2]).collect::<String>();
-    let solution_b = columns_b.iter().map(|c| &c.iter().find(|s| !s.trim().is_empty()).unwrap()[1..2]).collect::<String>();
+    let solution_a = columns_a.iter().map(|c| &c.last().unwrap()[1..2]).collect::<String>();
+    let solution_b = columns_b.iter().map(|c| &c.last().unwrap()[1..2]).collect::<String>();
 
     Ok((solution_a, solution_b))
 }
