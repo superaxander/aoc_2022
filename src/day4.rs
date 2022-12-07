@@ -7,7 +7,6 @@ pub fn main() -> Result<(i64, i64)> {
     let mut solution_a = 0;
     let mut solution_b = 0;
 
-
     for line in lines {
         let string = line?;
         let (left, right) = string.trim().split_once(',').context(", split failed")?;
@@ -20,7 +19,9 @@ pub fn main() -> Result<(i64, i64)> {
 
         let left_range = left_start..=left_end;
         let mut right_range = right_start..=right_end;
-        if left_range.clone().all(|i| right_range.contains(&i)) || right_range.all(|i| left_range.contains(&i)) {
+        if left_range.clone().all(|i| right_range.contains(&i))
+            || right_range.all(|i| left_range.contains(&i))
+        {
             solution_a += 1;
         }
 

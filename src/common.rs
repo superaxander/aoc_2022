@@ -1,3 +1,4 @@
+use anyhow::Result;
 use core::convert::AsRef;
 use core::result::Result::Ok;
 use std::fs::File;
@@ -5,11 +6,10 @@ use std::io;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::time::Instant;
-use anyhow::Result;
 
 pub fn read_lines<P>(filename: P) -> Result<io::Lines<BufReader<File>>>
-    where
-        P: AsRef<Path>,
+where
+    P: AsRef<Path>,
 {
     let file = File::open(filename)?;
     Ok(BufReader::new(file).lines())
@@ -68,7 +68,7 @@ impl Runnable for Day {
                     }
                     Err(err) => error!("Error occurred running {}: {}", name, err),
                 }
-            },
+            }
             Day::CombinedString(func) => {
                 let now = Instant::now();
                 let result = func();

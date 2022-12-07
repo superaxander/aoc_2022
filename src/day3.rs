@@ -1,5 +1,5 @@
-use std::collections::HashSet;
 use anyhow::Result;
+use std::collections::HashSet;
 
 use crate::common;
 
@@ -37,7 +37,14 @@ pub fn main() -> Result<(i64, i64)> {
         match i {
             0 => badge_set.extend(line.chars()),
             1 => badge_set.retain(|c| line.contains(*c)),
-            2 => solution_b += value(badge_set.drain().find(|c: &char| line.contains(*c)).expect("No common item found")),
+            2 => {
+                solution_b += value(
+                    badge_set
+                        .drain()
+                        .find(|c: &char| line.contains(*c))
+                        .expect("No common item found"),
+                )
+            }
             _ => unreachable!(),
         }
         i = (i + 1) % 3;

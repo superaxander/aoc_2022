@@ -15,7 +15,8 @@ pub fn main() -> Result<(i64, i64)> {
 
         solution_a += if them == you {
             3 + you + 1
-        } else if (3 + you - them) % 3 == 1 { // Difference is +1
+        } else if (3 + you - them) % 3 == 1 {
+            // Difference is +1
             6 + you + 1
         } else {
             you + 1
@@ -25,7 +26,7 @@ pub fn main() -> Result<(i64, i64)> {
             0 => (3 + them - 1) % 3 + 1,
             1 => them + 1 + 3,
             2 => (them + 1) % 3 + 1 + 6,
-            _ => panic!()
+            _ => panic!(),
         };
     }
 
