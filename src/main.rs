@@ -1,5 +1,4 @@
 #![feature(array_windows)]
-#![feature(slice_partition_dedup)]
 #[macro_use]
 extern crate log;
 extern crate pretty_env_logger;
@@ -22,6 +21,7 @@ mod day5;
 mod day6;
 mod day7;
 mod day8;
+mod day9;
 
 fn main() {
     pretty_env_logger::init();
@@ -34,5 +34,6 @@ fn main() {
     Day::CombinedUsize(day6::main).run("day 6");
     Day::CombinedUsize(day7::main).run("day 7");
     Day::CombinedUsize(day8::main).run("day 8");
+    Day::CombinedUsize(day9::main).run("day 9");
     info!("All days together took {:#?}", now.elapsed());
 }

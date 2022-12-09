@@ -23,7 +23,7 @@ pub fn main() -> Result<(usize, usize)> {
             let (right, c_r) = check_range_x(&grid, width, y, h, x + 1..width);
             let (top, c_t) = check_range_y(&grid, width, x, h, (0..y).rev());
             let (bottom, c_b) = check_range_y(&grid, width, x, h, y + 1..height);
-            if left || right || top || bottom { 
+            if left || right || top || bottom {
                 solution_a += 1;
             }
             let scenic_score = c_l * c_r * c_t * c_b;
