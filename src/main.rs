@@ -14,6 +14,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 
 mod common;
 mod day1;
+mod day10;
 mod day2;
 mod day3;
 mod day4;
@@ -35,5 +36,6 @@ fn main() {
     Day::CombinedUsize(day7::main).run("day 7");
     Day::CombinedUsize(day8::main).run("day 8");
     Day::CombinedUsize(day9::main).run("day 9");
+    Day::CombinedLong(day10::main).run("day 10");
     info!("All days together took {:#?}", now.elapsed());
 }
