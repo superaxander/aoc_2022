@@ -46,10 +46,10 @@ pub fn main() -> Result<(usize, usize)> {
 
     let mut sizes = Vec::new();
     get_directory_sizes(&directories, "", &mut sizes);
-    let solution_a = sizes.iter().filter(|n| **n <= 100000).sum();
+    let solution_a = sizes.iter().filter(|n| **n <= 100_000).sum();
 
-    let remaining_space = 70000000 - sizes.last().unwrap();
-    let to_delete = 30000000 - remaining_space;
+    let remaining_space = 70_000_000 - sizes.last().unwrap();
+    let to_delete = 30_000_000 - remaining_space;
     let solution_b = *sizes.iter().filter(|n| **n >= to_delete).min().unwrap();
 
     Ok((solution_a, solution_b))

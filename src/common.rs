@@ -26,145 +26,90 @@ pub enum Day {
     SeparatedULong(fn(bool) -> Result<u64>),
 }
 
+impl Day {
+    fn run_with_result(&self, name: &str) -> Result<()> {
+        match self {
+            Day::Combined(func) => {
+                let now = Instant::now();
+                let (solution_a, solution_b) = func()?;
+                info!("Combined parts took {:#?}", now.elapsed());
+                info!("Solution {}a: {}", name, solution_a);
+                info!("Solution {}b: {}", name, solution_b);
+            }
+            Day::CombinedUsize(func) => {
+                let now = Instant::now();
+                let (solution_a, solution_b) = func()?;
+                info!("Combined parts took {:#?}", now.elapsed());
+                info!("Solution {}a: {}", name, solution_a);
+                info!("Solution {}b: {}", name, solution_b);
+            }
+            Day::CombinedLong(func) => {
+                let now = Instant::now();
+                let (solution_a, solution_b) = func()?;
+                info!("Combined parts took {:#?}", now.elapsed());
+                info!("Solution {}a: {}", name, solution_a);
+                info!("Solution {}b: {}", name, solution_b);
+            }
+            Day::CombinedString(func) => {
+                let now = Instant::now();
+                let (solution_a, solution_b) = func()?;
+                info!("Combined parts took {:#?}", now.elapsed());
+                info!("Solution {}a: {}", name, solution_a);
+                info!("Solution {}b: {}", name, solution_b);
+            }
+            Day::Separated(func) => {
+                let now = Instant::now();
+                let result_a = func(false)?;
+                info!("Part a took {:#?}", now.elapsed());
+                let now = Instant::now();
+                let result_b = func(true)?;
+                info!("Part b took {:#?}", now.elapsed());
+                info!("Solution {}a: {}", name, result_a);
+                info!("Solution {}b: {}", name, result_b);
+            }
+            Day::SeparatedLong(func) => {
+                let now = Instant::now();
+                let result_a = func(false)?;
+                info!("Part a took {:#?}", now.elapsed());
+                let now = Instant::now();
+                let result_b = func(true)?;
+                info!("Part b took {:#?}", now.elapsed());
+                info!("Solution {}a: {}", name, result_a);
+                info!("Solution {}b: {}", name, result_b);
+            }
+            Day::SeparatedUsize(func) => {
+                let now = Instant::now();
+                let result_a = func(false)?;
+                info!("Part a took {:#?}", now.elapsed());
+                let now = Instant::now();
+                let result_b = func(true)?;
+                info!("Part b took {:#?}", now.elapsed());
+                info!("Solution {}a: {}", name, result_a);
+                info!("Solution {}b: {}", name, result_b);
+            }
+            Day::SeparatedULong(func) => {
+                let now = Instant::now();
+                let result_a = func(false)?;
+                info!("Part a took {:#?}", now.elapsed());
+                let now = Instant::now();
+                let result_b = func(true)?;
+                info!("Part b took {:#?}", now.elapsed());
+                info!("Solution {}a: {}", name, result_a);
+                info!("Solution {}b: {}", name, result_b);
+            }
+        }
+        Ok(())
+    }
+}
+
 pub(crate) trait Runnable {
     fn run(&self, name: &str);
 }
 
 impl Runnable for Day {
     fn run(&self, name: &str) {
-        match self {
-            Day::Combined(func) => {
-                let now = Instant::now();
-                let result = func();
-                info!("Combined parts took {:#?}", now.elapsed());
-                match result {
-                    Ok((solution_a, solution_b)) => {
-                        info!("Solution {}a: {}", name, solution_a);
-                        info!("Solution {}b: {}", name, solution_b);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-            }
-            Day::CombinedUsize(func) => {
-                let now = Instant::now();
-                let result = func();
-                info!("Combined parts took {:#?}", now.elapsed());
-                match result {
-                    Ok((solution_a, solution_b)) => {
-                        info!("Solution {}a: {}", name, solution_a);
-                        info!("Solution {}b: {}", name, solution_b);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-            }
-            Day::CombinedLong(func) => {
-                let now = Instant::now();
-                let result = func();
-                info!("Combined parts took {:#?}", now.elapsed());
-                match result {
-                    Ok((solution_a, solution_b)) => {
-                        info!("Solution {}a: {}", name, solution_a);
-                        info!("Solution {}b: {}", name, solution_b);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-            }
-            Day::CombinedString(func) => {
-                let now = Instant::now();
-                let result = func();
-                info!("Combined parts took {:#?}", now.elapsed());
-                match result {
-                    Ok((solution_a, solution_b)) => {
-                        info!("Solution {}a: {}", name, solution_a);
-                        info!("Solution {}b: {}", name, solution_b);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-            }
-            Day::Separated(func) => {
-                let now = Instant::now();
-                let result_a = func(false);
-                info!("Part a took {:#?}", now.elapsed());
-                let now = Instant::now();
-                let result_b = func(true);
-                info!("Part b took {:#?}", now.elapsed());
-                match result_a {
-                    Ok(solution_a) => {
-                        info!("Solution {}a: {}", name, solution_a);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-
-                match result_b {
-                    Ok(solution_b) => {
-                        info!("Solution {}b: {}", name, solution_b);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-            }
-            Day::SeparatedLong(func) => {
-                let now = Instant::now();
-                let result_a = func(false);
-                info!("Part a took {:#?}", now.elapsed());
-                let now = Instant::now();
-                let result_b = func(true);
-                info!("Part b took {:#?}", now.elapsed());
-                match result_a {
-                    Ok(solution_a) => {
-                        info!("Solution {}a: {}", name, solution_a);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-
-                match result_b {
-                    Ok(solution_b) => {
-                        info!("Solution {}b: {}", name, solution_b);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-            }
-            Day::SeparatedUsize(func) => {
-                let now = Instant::now();
-                let result_a = func(false);
-                info!("Part a took {:#?}", now.elapsed());
-                let now = Instant::now();
-                let result_b = func(true);
-                info!("Part b took {:#?}", now.elapsed());
-                match result_a {
-                    Ok(solution_a) => {
-                        info!("Solution {}a: {}", name, solution_a);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-
-                match result_b {
-                    Ok(solution_b) => {
-                        info!("Solution {}b: {}", name, solution_b);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-            }
-            Day::SeparatedULong(func) => {
-                let now = Instant::now();
-                let result_a = func(false);
-                info!("Part a took {:#?}", now.elapsed());
-                let now = Instant::now();
-                let result_b = func(true);
-                info!("Part b took {:#?}", now.elapsed());
-                match result_a {
-                    Ok(solution_a) => {
-                        info!("Solution {}a: {}", name, solution_a);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-
-                match result_b {
-                    Ok(solution_b) => {
-                        info!("Solution {}b: {}", name, solution_b);
-                    }
-                    Err(err) => error!("Error occurred running {}: {}", name, err),
-                }
-            }
+        if let Err(e) = self.run_with_result(name) {
+            error!("Error occurred running {}: {}", name, e);
         }
     }
 }

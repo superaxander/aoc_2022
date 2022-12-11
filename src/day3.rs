@@ -43,7 +43,7 @@ pub fn main() -> Result<(i64, i64)> {
                         .drain()
                         .find(|c: &char| line.contains(*c))
                         .expect("No common item found"),
-                )
+                );
             }
             _ => unreachable!(),
         }

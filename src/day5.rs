@@ -32,10 +32,10 @@ pub fn main() -> Result<(String, String)> {
             columns_b[dst].extend(src_elements);
         } else if line.is_empty() {
             parse_commands = true;
-            columns_a.iter_mut().for_each(|c| {
+            for c in &mut columns_a {
                 c.pop();
                 c.reverse();
-            });
+            }
             columns_b = columns_a.clone();
         } else {
             let width = (line.len() + 1) / 4;
@@ -50,9 +50,9 @@ pub fn main() -> Result<(String, String)> {
                         columns_a[i].push(l.to_owned());
                     }
                 } else if l.trim().is_empty() {
-                    columns_a.push(vec![])
+                    columns_a.push(vec![]);
                 } else {
-                    columns_a.push(vec![l.to_owned()])
+                    columns_a.push(vec![l.to_owned()]);
                 }
             }
         }
