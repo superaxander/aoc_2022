@@ -3,9 +3,9 @@ use regex::Regex;
 
 use crate::common;
 
-pub fn main() -> Result<(usize, usize)> {
-    const ROW_NUMBER: isize = 2_000_000;
-    const MAX_COORD: isize = 4_000_000;
+pub fn main() -> Result<(i64, i64)> {
+    const ROW_NUMBER: i64 = 2_000_000;
+    const MAX_COORD: i64 = 4_000_000;
     let re = Regex::new(
         "Sensor at x=(-?[0-9]+), y=(-?[0-9]+): closest beacon is at x=(-?[0-9]+), y=(-?[0-9]+)",
     )?;
@@ -15,36 +15,38 @@ pub fn main() -> Result<(usize, usize)> {
     let mut solution_b = 0;
 
     let mut sensors = Vec::new();
-    let mut beacons = Vec::new();
 
     for line in lines {
         let line = line?;
         if let Some(captures) = re.captures(&line) {
-            sensors.push((
-                captures.get(1).unwrap().as_str().parse::<isize>()?,
-                captures.get(2).unwrap().as_str().parse::<isize>()?,
-            ));
-            beacons.push((
-                captures.get(3).unwrap().as_str().parse::<isize>()?,
-                captures.get(4).unwrap().as_str().parse::<isize>()?,
-            ));
+            let sensor = (
+                captures.get(1).unwrap().as_str().parse::<i64>()?,
+                captures.get(2).unwrap().as_str().parse::<i64>()?,
+            );
+            let distance = manhattan_distance(
+                &sensor,
+                &(
+                    captures.get(3).unwrap().as_str().parse::<i64>()?,
+                    captures.get(4).unwrap().as_str().parse::<i64>()?,
+                ),
+            ) as i64;
+            sensors.push((sensor, distance));
         }
     }
+
+    sensors.sort_unstable_by_key(|((from, _), _)| *from);
+
     let mut excluded_ranges = Vec::new();
 
-    for i in 0..sensors.len() {
-        let sensor = sensors[i];
-        let beacon = beacons[i];
-        let distance = manhattan_distance(&sensor, &beacon) as isize;
-        let distance_from_y = sensor.1.abs_diff(ROW_NUMBER) as isize;
-        let half_distance = distance - distance_from_y;
+    for (sensor, distance) in &sensors {
+        let half_distance = distance.wrapping_sub_unsigned(sensor.1.abs_diff(ROW_NUMBER));
         if half_distance >= 0 {
             excluded_ranges.push(((sensor.0 - half_distance), (sensor.0 + half_distance)));
         }
     }
     excluded_ranges.sort_unstable_by_key(|(start, _)| *start);
     let mut last = excluded_ranges[0].0 - 1;
-    for range in &excluded_ranges {
+    for range in excluded_ranges.drain(0..) {
         if range.1 > last {
             let diff = last - range.0;
             solution_a += range.1 - range.0;
@@ -54,15 +56,10 @@ pub fn main() -> Result<(usize, usize)> {
             last = range.1;
         }
     }
-    excluded_ranges.clear();
 
     for y in 0..=MAX_COORD {
-        for i in 0..sensors.len() {
-            let sensor = sensors[i];
-            let beacon = beacons[i];
-            let distance = manhattan_distance(&sensor, &beacon) as isize;
-            let distance_from_y = sensor.1.abs_diff(y) as isize;
-            let half_distance = distance - distance_from_y;
+        for (sensor, distance) in &sensors {
+            let half_distance = distance.wrapping_sub_unsigned(sensor.1.abs_diff(y));
             if half_distance >= 0 {
                 excluded_ranges.push((
                     (sensor.0 - half_distance).max(0),
@@ -72,21 +69,20 @@ pub fn main() -> Result<(usize, usize)> {
         }
         excluded_ranges.sort_unstable_by_key(|(start, _)| *start);
         let mut last = -1;
-        for range in &excluded_ranges {
+        for range in excluded_ranges.drain(0..) {
             if range.1 > last {
                 if range.0 > last + 1 && last + 1 < MAX_COORD {
-                    solution_b = (last + 1) * 4000000 + y;
+                    solution_b = (last + 1) * 4_000_000 + y;
                 }
                 last = range.1;
             }
         }
-        excluded_ranges.clear();
     }
 
-    Ok((solution_a as usize, solution_b as usize))
+    Ok((solution_a, solution_b))
 }
 
 #[inline]
-fn manhattan_distance(p0: &(isize, isize), p1: &(isize, isize)) -> usize {
+fn manhattan_distance(p0: &(i64, i64), p1: &(i64, i64)) -> u64 {
     p0.0.abs_diff(p1.0) + p0.1.abs_diff(p1.1)
 }
