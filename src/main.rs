@@ -20,6 +20,7 @@ mod day12;
 mod day13;
 mod day14;
 mod day15;
+mod day16;
 mod day2;
 mod day3;
 mod day4;
@@ -44,8 +45,9 @@ fn main() {
     Day::CombinedLong(day10::main).run("day 10");
     Day::SeparatedUsize(day11::main).run("day 11");
     Day::CombinedUsize(day12::main).run("day 12");
-    Day::CombinedUsize(day13::main).run("day 13");
-    Day::CombinedUsize(day14::main).run("day 14");
-    Day::CombinedLong(day15::main).run("day 15");
+    // Day::CombinedUsize(day13::main).run("day 13");
+    // Day::CombinedUsize(day14::main).run("day 14");
+    // Day::CombinedLong(day15::main).run("day 15");
+    Day::CombinedUsize(day16::main).run("day 16");
     info!("All days together took {:#?}", now.elapsed());
 }

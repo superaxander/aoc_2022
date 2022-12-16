@@ -14,3 +14,5 @@ regex = "1.7.0"
 superluminal-perf = "0.1.1"
 mimalloc = {version = "0.1.32", default-features = false}
 anyhow = "1.0.66"
+bit-vec = "0.6.3"
+itertools = "0.10.5"
