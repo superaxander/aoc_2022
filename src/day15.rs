@@ -23,6 +23,7 @@ pub fn main() -> Result<(i64, i64)> {
                 captures.get(1).unwrap().as_str().parse::<i64>()?,
                 captures.get(2).unwrap().as_str().parse::<i64>()?,
             );
+            #[allow(clippy::cast_possible_wrap)]
             let distance = manhattan_distance(
                 &sensor,
                 &(

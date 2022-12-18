@@ -15,6 +15,7 @@ where
     Ok(BufReader::new(file).lines())
 }
 
+#[allow(dead_code)]
 pub enum Day {
     Combined(fn() -> Result<(i32, i32)>),
     CombinedUsize(fn() -> Result<(usize, usize)>),

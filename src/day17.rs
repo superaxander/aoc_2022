@@ -3,17 +3,17 @@ use std::collections::{HashMap, HashSet};
 
 use crate::common;
 
-pub fn main() -> Result<(i64, i64)> {
-    const ITERATION_COUNT: i64 = 1_000_000_000_000;
+const ITERATION_COUNT: i64 = 1_000_000_000_000;
 
-    const ROCK_SHAPES: &[&[(i64, i64)]] = &[
-        &[(0, 0), (1, 0), (2, 0), (3, 0)],
-        &[(0, 1), (1, 0), (1, 1), (1, 2), (2, 1)],
-        &[(0, 0), (1, 0), (2, 0), (2, 1), (2, 2)],
-        &[(0, 0), (0, 1), (0, 2), (0, 3)],
-        &[(0, 0), (0, 1), (1, 0), (1, 1)],
-    ];
-    
+const ROCK_SHAPES: &[&[(i64, i64)]] = &[
+    &[(0, 0), (1, 0), (2, 0), (3, 0)],
+    &[(0, 1), (1, 0), (1, 1), (1, 2), (2, 1)],
+    &[(0, 0), (1, 0), (2, 0), (2, 1), (2, 2)],
+    &[(0, 0), (0, 1), (0, 2), (0, 3)],
+    &[(0, 0), (0, 1), (1, 0), (1, 1)],
+];
+
+pub fn main() -> Result<(i64, i64)> {
     let lines = common::read_lines("inputs/17.txt")?;
 
     let mut winds = Vec::new();
@@ -59,6 +59,7 @@ pub fn main() -> Result<(i64, i64)> {
                 }
                 highest += loop_size * (remaining / (loop_length as i64));
                 let offset = offset_start - loop_start;
+                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
                 for j in 0..remaining % (loop_length as i64) {
                     highest +=
                         combinations[&order[(offset + j as usize) % loop_length + loop_start]];
