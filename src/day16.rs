@@ -1,5 +1,4 @@
 use anyhow::Result;
-use bit_vec::BitVec;
 use std::collections::HashMap;
 
 use crate::common;
@@ -36,86 +35,107 @@ pub fn main() -> Result<(usize, usize)> {
             )
         })
         .collect();
-    let distances = shortest_distances(&valves);
+    let init_distances = shortest_distances(&valves);
     let valves = valves
         .into_iter()
         .map(|(flow_rate, _)| flow_rate)
         .collect::<Vec<usize>>();
-    let first_valve = valve_names["AA"];
-    let filtered = (0..valves.len())
-        .filter(|i| valves[*i] > 0)
-        .collect::<Vec<usize>>();
+    let count = valves.len();
 
-    superluminal_perf::begin_event("Part a");
+    let first_valve = valve_names["AA"];
+    let filtered = (0..count)
+        .filter(|i| valves[*i] > 0)
+        .map(|i| valves[i])
+        .collect::<Vec<usize>>();
+    let mut distances: Vec<usize> = (0..count)
+        .filter(|i| valves[*i] > 0)
+        .flat_map(|i| {
+            let start = &init_distances[i * count..];
+            (0..count)
+                .filter(|j| valves[*j] > 0)
+                .map(|j| start[j])
+                .chain([start[first_valve]])
+        })
+        .collect();
+    let start = &init_distances[first_valve * count..];
+    distances.extend((0..count).filter(|j| valves[*j] > 0).map(|j| start[j]));
+    distances.push(0);
+
     let solution_a = solve(
-        (first_valve, 1, BitVec::from_elem(filtered.len(), false)),
+        (filtered.len(), 1, 0),
         &distances,
-        &valves,
         &filtered,
         &mut HashMap::new(),
         false,
-        first_valve,
+        0,
     );
     let solution_b = solve(
-        (first_valve, 5, BitVec::from_elem(filtered.len(), false)),
+        (filtered.len(), 5, 0),
         &distances,
-        &valves,
         &filtered,
         &mut HashMap::new(),
         true,
-        first_valve,
+        0,
     );
     Ok((solution_a, solution_b))
 }
 
-type State = (usize, usize, BitVec);
+type State = (usize, usize, usize);
+
+#[inline]
+fn compress(state: State) -> usize {
+    state.0 | state.1 << 8 | state.2 << 16
+}
 
 fn solve(
     (position, minute, mut opened): State,
-    distances: &[Vec<usize>],
+    distances: &[usize],
     valves: &[usize],
-    filtered: &[usize],
-    cache: &mut HashMap<State, usize>,
+    cache: &mut HashMap<usize, usize>,
     first_pass: bool,
-    first_valve: usize,
+    current_best: usize,
 ) -> usize {
-    let state = (position, minute, opened.clone());
-    if !first_pass && cache.contains_key(&state) {
-        return cache[&state];
+    let len = valves.len() + 1;
+    let state = compress((position, minute, opened));
+    if !first_pass {
+        if cache.contains_key(&state) {
+            return cache[&state];
+        }
+        let mut potential = 0;
+        for (i, flow_rate) in valves.iter().copied().enumerate() {
+            if opened & (1 << i) == 0 {
+                potential += (30 - minute - distances[position * len + i]) * flow_rate;
+            }
+        }
+        if potential < current_best {
+            return 0;
+        }
     }
-    let mut sum = 0;
-    for (i, valve) in filtered.iter().copied().enumerate() {
-        if !opened[i] {
-            let dist = distances[position][valve] + 1;
+    let mut sum: usize = 0;
+    for (i, flow_rate) in valves.iter().copied().enumerate() {
+        if opened & (1 << i) == 0 {
+            let dist = distances[position * len + i] + 1;
             if minute + dist > 30 {
                 continue;
             }
-            opened.set(i, true);
+            opened |= 1 << i;
+            let extra_flow = (31 - minute - dist) * flow_rate;
             let recursive_sum = solve(
-                (valve, minute + dist, opened.clone()),
+                (i, minute + dist, opened),
                 distances,
                 valves,
-                filtered,
                 cache,
                 first_pass,
-                first_valve,
-            ) + (31 - minute - dist) * valves[valve];
-            opened.set(i, false);
+                sum.saturating_sub(extra_flow),
+            ) + extra_flow;
+            opened &= !(1 << i);
             if recursive_sum > sum {
                 sum = recursive_sum;
             }
         }
     }
     if first_pass {
-        let elephant_sum = solve(
-            (first_valve, 5, opened),
-            distances,
-            valves,
-            filtered,
-            cache,
-            false,
-            first_valve,
-        );
+        let elephant_sum = solve((len - 1, 5, opened), distances, valves, cache, false, sum);
         if elephant_sum > sum {
             return elephant_sum;
         }
@@ -126,13 +146,14 @@ fn solve(
     sum
 }
 
-fn shortest_distances(valves: &Vec<(usize, Vec<usize>)>) -> Vec<Vec<usize>> {
-    let mut distances = vec![vec![usize::MAX - 1; valves.len()]; valves.len()];
+fn shortest_distances(valves: &Vec<(usize, Vec<usize>)>) -> Vec<usize> {
+    let len = valves.len();
+    let mut distances = vec![usize::MAX - 1; len * len];
     for (valve, (_, destinations)) in valves.iter().enumerate() {
         for d in destinations {
-            distances[valve][*d] = 1;
+            distances[valve * len + *d] = 1;
         }
-        distances[valve][valve] = 0;
+        distances[valve * len + valve] = 0;
     }
 
     let mut changed = true;
@@ -141,9 +162,9 @@ fn shortest_distances(valves: &Vec<(usize, Vec<usize>)>) -> Vec<Vec<usize>> {
 
         for (valve, (_, destinations)) in valves.iter().enumerate() {
             for d in destinations {
-                for i in 0..distances.len() {
-                    if distances[*d][i] + 1 < distances[valve][i] {
-                        distances[valve][i] = distances[*d][i] + 1;
+                for i in 0..len {
+                    if distances[*d * len + i] + 1 < distances[valve * len + i] {
+                        distances[valve * len + i] = distances[*d * len + i] + 1;
                         changed = true;
                     }
                 }
