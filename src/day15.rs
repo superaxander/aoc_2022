@@ -58,7 +58,7 @@ pub fn main() -> Result<(i64, i64)> {
         }
     }
 
-    for y in 0..=MAX_COORD {
+    'lines: for y in 0..=MAX_COORD {
         for (sensor, distance) in &sensors {
             let half_distance = distance.wrapping_sub_unsigned(sensor.1.abs_diff(y));
             if half_distance >= 0 {
@@ -74,6 +74,7 @@ pub fn main() -> Result<(i64, i64)> {
             if range.1 > last {
                 if range.0 > last + 1 && last + 1 < MAX_COORD {
                     solution_b = (last + 1) * 4_000_000 + y;
+                    break 'lines;
                 }
                 last = range.1;
             }

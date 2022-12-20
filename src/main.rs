@@ -59,6 +59,6 @@ fn main() {
     Day::CombinedLong(day17::main).run("day 17");
     Day::CombinedLong(day18::main).run("day 18");
     Day::CombinedUsize(day19::main).run("day 19");
-    Day::CombinedLong(day20::main).run("day 29");
+    Day::CombinedLong(day20::main).run("day 20");
     info!("All days together took {:#?}", now.elapsed());
 }
