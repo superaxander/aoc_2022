@@ -1,6 +1,7 @@
 use anyhow::Result;
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::cmp::Ordering;
+use std::collections::HashMap;
 
 use crate::common;
 
@@ -36,13 +37,10 @@ pub fn main() -> Result<(usize, usize)> {
             obsidian_production: 0,
             geode_production: 0,
         };
-        println!("Solving for {costs:?}");
-        // let geodes = solve(&state, &costs, 24,&mut HashMap::new());
-        // println!("Geodes after 24: {}", geodes);
-        // solution_a += id * geodes;
+        let geodes = solve(&state, &costs, 24, 0, &mut HashMap::new());
+        solution_a += id * geodes;
         if id < 4 {
-            let geodes = solve(&state, &costs, 32, &mut HashMap::new(), 1);
-            println!("Geodes after 32: {}", geodes);
+            let geodes = solve(&state, &costs, 32, 0, &mut HashMap::new());
             solution_b *= geodes;
         }
     }
@@ -77,73 +75,100 @@ fn solve(
     state: &State,
     costs: &Costs,
     max_tick: usize,
+    mut best: usize,
     cache: &mut HashMap<State, usize>,
-    best: usize,
 ) -> usize {
-    if state.tick >= max_tick {
-        return best;
+    match state.tick.cmp(&max_tick) {
+        Ordering::Equal => return state.geodes,
+        Ordering::Greater => return 0,
+        Ordering::Less => {}
+    }
+
+    if state.geodes
+        + (state.tick..max_tick)
+            .map(|i| (max_tick - i) * (state.geode_production + i - state.tick - 1))
+            .sum::<usize>()
+        < best
+    {
+        return 0;
     }
 
     if cache.contains_key(state) {
         return cache[state];
     }
 
-    let mut best = best;
-    if costs.ore_costs_geode <= state.ore && costs.obsidian_costs_geode <= state.obsidian {
-        let mut new_state = state.clone();
-        new_state.tick += 1;
-        new_state.ore -= costs.ore_costs_geode;
-        new_state.ore += state.ore_production;
-        new_state.clay += state.clay_production;
-        new_state.obsidian -= costs.obsidian_costs_geode;
-        new_state.obsidian += state.obsidian_production;
-        new_state.geodes += state.geode_production;
-        new_state.geode_production += 1;
-        best = solve(&new_state, costs, max_tick, cache, best)
-    } else {
-        if costs.ore_costs_obsidian <= state.ore && costs.clay_costs_obsidian <= state.clay {
-            let mut new_state = state.clone();
-            new_state.tick += 1;
-            new_state.ore -= costs.ore_costs_obsidian;
-            new_state.ore += state.ore_production;
-            new_state.clay -= costs.clay_costs_obsidian;
-            new_state.clay += state.clay_production;
-            new_state.obsidian += state.obsidian_production;
-            new_state.geodes += state.geode_production;
-            new_state.obsidian_production += 1;
-            best = solve(&new_state, costs, max_tick, cache, best);
-        } else {
-            if costs.ore_costs_clay <= state.ore {
-                let mut new_state = state.clone();
-                new_state.tick += 1;
-                new_state.ore -= costs.ore_costs_clay;
-                new_state.ore += state.ore_production;
-                new_state.clay += state.clay_production;
-                new_state.obsidian += state.obsidian_production;
-                new_state.geodes += state.geode_production;
-                new_state.clay_production += 1;
-                best = best.max(solve(&new_state, costs, max_tick, cache, best));
-            }
-            if costs.ore_costs_ore <= state.ore {
-                let mut new_state = state.clone();
-                new_state.tick += 1;
-                new_state.ore -= costs.ore_costs_ore;
-                new_state.ore += state.ore_production;
-                new_state.clay += state.clay_production;
-                new_state.obsidian += state.obsidian_production;
-                new_state.geodes += state.geode_production;
-                new_state.ore_production += 1;
-                best = best.max(solve(&new_state, costs, max_tick, cache, best));
-            }
-        }
+    best = best.max(state.geodes + state.geode_production * (max_tick - state.tick - 1));
 
+    if state.obsidian_production > 0 {
+        let ore_ticks = (costs.ore_costs_geode - state.ore.min(costs.ore_costs_geode))
+            .div_ceil(state.ore_production);
+        let obsidian_ticks = (costs.obsidian_costs_geode
+            - state.obsidian.min(costs.obsidian_costs_geode))
+        .div_ceil(state.obsidian_production);
+        let ticks = ore_ticks.max(obsidian_ticks) + 1;
         let mut new_state = state.clone();
-        new_state.tick += 1;
-        new_state.ore += state.ore_production;
-        new_state.clay += state.clay_production;
-        new_state.obsidian += state.obsidian_production;
-        new_state.geodes += state.geode_production;
-        best = best.max(solve(&new_state, costs, max_tick, cache, best));
+        new_state.tick += ticks;
+        new_state.ore += state.ore_production * ticks;
+        new_state.ore -= costs.ore_costs_geode;
+        new_state.clay += state.clay_production * ticks;
+        new_state.obsidian += state.obsidian_production * ticks;
+        new_state.obsidian -= costs.obsidian_costs_geode;
+        new_state.geodes += state.geode_production * ticks;
+        new_state.geode_production += 1;
+        best = best.max(solve(&new_state, costs, max_tick, best, cache));
+    }
+
+    if state.ore < costs.ore_costs_geode || state.obsidian < costs.obsidian_costs_geode {
+        if state.clay_production > 0 && costs.obsidian_costs_geode > state.obsidian_production {
+            let ore_ticks = (costs.ore_costs_obsidian - state.ore.min(costs.ore_costs_obsidian))
+                .div_ceil(state.ore_production);
+            let clay_ticks = (costs.clay_costs_obsidian
+                - state.clay.min(costs.clay_costs_obsidian))
+            .div_ceil(state.clay_production);
+            let ticks = ore_ticks.max(clay_ticks) + 1;
+            let mut new_state = state.clone();
+            new_state.tick += ticks;
+            new_state.ore += state.ore_production * ticks;
+            new_state.ore -= costs.ore_costs_obsidian;
+            new_state.clay += state.clay_production * ticks;
+            new_state.clay -= costs.clay_costs_obsidian;
+            new_state.obsidian += state.obsidian_production * ticks;
+            new_state.geodes += state.geode_production * ticks;
+            new_state.obsidian_production += 1;
+            best = best.max(solve(&new_state, costs, max_tick, best, cache));
+        }
+        if costs.clay_costs_obsidian > state.clay_production {
+            let ticks = 1
+                + (costs.ore_costs_clay - state.ore.min(costs.ore_costs_clay))
+                    .div_ceil(state.ore_production);
+            let mut new_state = state.clone();
+            new_state.tick += ticks;
+            new_state.ore += state.ore_production * ticks;
+            new_state.ore -= costs.ore_costs_clay;
+            new_state.clay += state.clay_production * ticks;
+            new_state.obsidian += state.obsidian_production * ticks;
+            new_state.geodes += state.geode_production * ticks;
+            new_state.clay_production += 1;
+            best = best.max(solve(&new_state, costs, max_tick, best, cache));
+        }
+        if costs
+            .ore_costs_geode
+            .max(costs.ore_costs_obsidian.max(costs.ore_costs_clay))
+            > state.ore_production
+        {
+            let ticks = 1
+                + (costs.ore_costs_ore - state.ore.min(costs.ore_costs_ore))
+                    .div_ceil(state.ore_production);
+            let mut new_state = state.clone();
+            new_state.tick += ticks;
+            new_state.ore += state.ore_production * ticks;
+            new_state.ore -= costs.ore_costs_ore;
+            new_state.clay += state.clay_production * ticks;
+            new_state.obsidian += state.obsidian_production * ticks;
+            new_state.geodes += state.geode_production * ticks;
+            new_state.ore_production += 1;
+            best = best.max(solve(&new_state, costs, max_tick, best, cache));
+        }
     }
 
     cache.insert(state.clone(), best);
