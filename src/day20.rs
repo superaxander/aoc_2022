@@ -20,7 +20,7 @@ pub fn main() -> Result<(i64, i64)> {
         calculate_solution(&numbers)
     };
     let solution_b = {
-        numbers.iter_mut().for_each(|(_,n)| *n *= 811589153);
+        numbers.iter_mut().for_each(|(_, n)| *n *= 811_589_153);
         let mut original_indices: Vec<usize> = (0..len).collect();
         for _ in 0..10 {
             mix(&mut numbers, &mut original_indices);
@@ -33,13 +33,14 @@ pub fn main() -> Result<(i64, i64)> {
 
 fn calculate_solution(numbers: &[(usize, i64)]) -> i64 {
     let len = numbers.len();
-    let zero_index = numbers.iter().position(|(_,n)| *n == 0).unwrap();
+    let zero_index = numbers.iter().position(|(_, n)| *n == 0).unwrap();
     let n1000 = numbers[(zero_index + 1000) % len].1;
     let n2000 = numbers[(zero_index + 2000) % len].1;
     let n3000 = numbers[(zero_index + 3000) % len].1;
     n1000 + n2000 + n3000
 }
 
+#[allow(clippy::cast_possible_truncation)]
 fn mix(numbers: &mut [(usize, i64)], original_indices: &mut [usize]) {
     let len = numbers.len();
     for idx in 0..len {
