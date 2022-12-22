@@ -219,8 +219,8 @@ fn fold_cube(
         .enumerate()
         .any(|(i, b)| *b && connections[i].contains(&usize::MAX))
     {
-        for seg_y in 0..3 {
-            for seg_x in 0..4 {
+        for seg_y in 0..height {
+            for seg_x in 0..width {
                 if populated[seg_y * width + seg_x] {
                     if seg_y > 0 && populated[(seg_y - 1) * width + seg_x] {
                         connections[seg_y * width + seg_x][0] = connections
