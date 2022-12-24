@@ -1,6 +1,5 @@
 #![feature(array_windows)]
 #![feature(int_roundings)]
-#![deny(clippy::pedantic)]
 #[macro_use]
 extern crate log;
 extern crate pretty_env_logger;
@@ -40,6 +39,7 @@ mod day20;
 mod day21;
 mod day22;
 mod day23;
+mod day24;
 
 fn main() {
     pretty_env_logger::init();
@@ -67,5 +67,6 @@ fn main() {
     Day::CombinedLong(day21::main).run("day 21");
     Day::CombinedUsize(day22::main).run("day 22");
     Day::CombinedLong(day23::main).run("day 23");
+    Day::CombinedUsize(day24::main).run("day 24");
     info!("All days together took {:#?}", now.elapsed());
 }
