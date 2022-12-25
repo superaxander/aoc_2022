@@ -133,47 +133,7 @@ fn fold_cube(
     x: usize,
     y: usize,
 ) -> ([Region; 12], [[usize; 5]; 12]) {
-    let (width, height, segments) = if x > y {
-        let l = x / 4;
-        (
-            4,
-            3,
-            [
-                (1, l, 1, l),
-                (l + 1, l * 2, 1, l),
-                (l * 2 + 1, l * 3, 1, l),
-                (l * 3 + 1, l * 4, 1, l),
-                (1, l, l + 1, l * 2),
-                (l + 1, l * 2, l + 1, l * 2),
-                (l * 2 + 1, l * 3, l + 1, l * 2),
-                (l * 3 + 1, l * 4, l + 1, l * 2),
-                (1, l, l * 2 + 1, l * 3),
-                (l + 1, l * 2, l * 2 + 1, l * 3),
-                (l * 2 + 1, l * 3, l * 2 + 1, l * 3),
-                (l * 3 + 1, l * 4, l * 2 + 1, l * 3),
-            ],
-        )
-    } else {
-        let l = y / 4;
-        (
-            3,
-            4,
-            [
-                (1, l, 1, l),
-                (l + 1, l * 2, 1, l),
-                (l * 2 + 1, l * 3, 1, l),
-                (1, l, l + 1, l * 2),
-                (l + 1, l * 2, l + 1, l * 2),
-                (l * 2 + 1, l * 3, l + 1, l * 2),
-                (1, l, l * 2 + 1, l * 3),
-                (l + 1, l * 2, l * 2 + 1, l * 3),
-                (l * 2 + 1, l * 3, l * 2 + 1, l * 3),
-                (1, l, l * 3 + 1, l * 4),
-                (l + 1, l * 2, l * 3 + 1, l * 4),
-                (l * 2 + 1, l * 3, l * 3 + 1, l * 4),
-            ],
-        )
-    };
+    let (width, height, segments) = get_segments(x, y);
     let mut populated = [false; 12];
     for (i, (x_min, _, y_min, _)) in segments.iter().enumerate() {
         if map.contains_key(&(*x_min, *y_min)) {
@@ -214,6 +174,16 @@ fn fold_cube(
         }
     }
 
+    iterate_connections(width, height, &populated, &mut connections);
+    (segments, connections)
+}
+
+fn iterate_connections(
+    width: usize,
+    height: usize,
+    populated: &[bool; 12],
+    connections: &mut [[usize; 5]; 12],
+) {
     while populated
         .iter()
         .enumerate()
@@ -221,68 +191,84 @@ fn fold_cube(
     {
         for seg_y in 0..height {
             for seg_x in 0..width {
-                if populated[seg_y * width + seg_x] {
-                    if seg_y > 0 && populated[(seg_y - 1) * width + seg_x] {
-                        connections[seg_y * width + seg_x][0] = connections
-                            [(seg_y - 1) * width + seg_x][0]
-                            .min(connections[seg_y * width + seg_x][0]);
-                        connections[seg_y * width + seg_x][2] = connections
-                            [(seg_y - 1) * width + seg_x][2]
-                            .min(connections[seg_y * width + seg_x][2]);
-                        connections[seg_y * width + seg_x][1] = connections
-                            [(seg_y - 1) * width + seg_x][4]
-                            .min(connections[seg_y * width + seg_x][1]);
-                        connections[seg_y * width + seg_x][4] = connections
-                            [(seg_y - 1) * width + seg_x][3]
-                            .min(connections[seg_y * width + seg_x][4]);
+                let this = seg_y * width + seg_x;
+                if populated[this] {
+                    let up = this - width;
+                    let down = this + width;
+                    let left = this - 1;
+                    let right = this + 1;
+                    if seg_y > 0 && populated[up] {
+                        connections[this][0] = connections[up][0].min(connections[this][0]);
+                        connections[this][2] = connections[up][2].min(connections[this][2]);
+                        connections[this][1] = connections[up][4].min(connections[this][1]);
+                        connections[this][4] = connections[up][3].min(connections[this][4]);
                     }
-                    if seg_y < 2 && populated[(seg_y + 1) * width + seg_x] {
-                        connections[seg_y * width + seg_x][0] = connections
-                            [(seg_y + 1) * width + seg_x][0]
-                            .min(connections[seg_y * width + seg_x][0]);
-                        connections[seg_y * width + seg_x][2] = connections
-                            [(seg_y + 1) * width + seg_x][2]
-                            .min(connections[seg_y * width + seg_x][2]);
-                        connections[seg_y * width + seg_x][3] = connections
-                            [(seg_y + 1) * width + seg_x][4]
-                            .min(connections[seg_y * width + seg_x][3]);
-                        connections[seg_y * width + seg_x][4] = connections
-                            [(seg_y + 1) * width + seg_x][1]
-                            .min(connections[seg_y * width + seg_x][4]);
+                    if seg_y < 2 && populated[down] {
+                        connections[this][0] = connections[down][0].min(connections[this][0]);
+                        connections[this][2] = connections[down][2].min(connections[this][2]);
+                        connections[this][3] = connections[down][4].min(connections[this][3]);
+                        connections[this][4] = connections[down][1].min(connections[this][4]);
                     }
-                    if seg_x > 0 && populated[seg_y * width + seg_x - 1] {
-                        connections[seg_y * width + seg_x][1] = connections
-                            [seg_y * width + seg_x - 1][1]
-                            .min(connections[seg_y * width + seg_x][1]);
-                        connections[seg_y * width + seg_x][3] = connections
-                            [seg_y * width + seg_x - 1][3]
-                            .min(connections[seg_y * width + seg_x][3]);
-                        connections[seg_y * width + seg_x][0] = connections
-                            [seg_y * width + seg_x - 1][4]
-                            .min(connections[seg_y * width + seg_x][0]);
-                        connections[seg_y * width + seg_x][4] = connections
-                            [seg_y * width + seg_x - 1][2]
-                            .min(connections[seg_y * width + seg_x][4]);
+                    if seg_x > 0 && populated[left] {
+                        connections[this][1] = connections[left][1].min(connections[this][1]);
+                        connections[this][3] = connections[left][3].min(connections[this][3]);
+                        connections[this][0] = connections[left][4].min(connections[this][0]);
+                        connections[this][4] = connections[left][2].min(connections[this][4]);
                     }
-                    if seg_x < 3 && populated[seg_y * width + seg_x + 1] {
-                        connections[seg_y * width + seg_x][1] = connections
-                            [seg_y * width + seg_x + 1][1]
-                            .min(connections[seg_y * width + seg_x][1]);
-                        connections[seg_y * width + seg_x][3] = connections
-                            [seg_y * width + seg_x + 1][3]
-                            .min(connections[seg_y * width + seg_x][3]);
-                        connections[seg_y * width + seg_x][2] = connections
-                            [seg_y * width + seg_x + 1][4]
-                            .min(connections[seg_y * width + seg_x][2]);
-                        connections[seg_y * width + seg_x][4] = connections
-                            [seg_y * width + seg_x + 1][0]
-                            .min(connections[seg_y * width + seg_x][4]);
+                    if seg_x < 3 && populated[right] {
+                        connections[this][1] = connections[right][1].min(connections[this][1]);
+                        connections[this][3] = connections[right][3].min(connections[this][3]);
+                        connections[this][2] = connections[right][4].min(connections[this][2]);
+                        connections[this][4] = connections[right][0].min(connections[this][4]);
                     }
                 }
             }
         }
     }
-    (segments, connections)
+}
+
+fn get_segments(x: usize, y: usize) -> (usize, usize, [Region; 12]) {
+    if x > y {
+        let l = x / 4;
+        (
+            4,
+            3,
+            [
+                (1, l, 1, l),
+                (l + 1, l * 2, 1, l),
+                (l * 2 + 1, l * 3, 1, l),
+                (l * 3 + 1, l * 4, 1, l),
+                (1, l, l + 1, l * 2),
+                (l + 1, l * 2, l + 1, l * 2),
+                (l * 2 + 1, l * 3, l + 1, l * 2),
+                (l * 3 + 1, l * 4, l + 1, l * 2),
+                (1, l, l * 2 + 1, l * 3),
+                (l + 1, l * 2, l * 2 + 1, l * 3),
+                (l * 2 + 1, l * 3, l * 2 + 1, l * 3),
+                (l * 3 + 1, l * 4, l * 2 + 1, l * 3),
+            ],
+        )
+    } else {
+        let l = y / 4;
+        (
+            3,
+            4,
+            [
+                (1, l, 1, l),
+                (l + 1, l * 2, 1, l),
+                (l * 2 + 1, l * 3, 1, l),
+                (1, l, l + 1, l * 2),
+                (l + 1, l * 2, l + 1, l * 2),
+                (l * 2 + 1, l * 3, l + 1, l * 2),
+                (1, l, l * 2 + 1, l * 3),
+                (l + 1, l * 2, l * 2 + 1, l * 3),
+                (l * 2 + 1, l * 3, l * 2 + 1, l * 3),
+                (1, l, l * 3 + 1, l * 4),
+                (l + 1, l * 2, l * 3 + 1, l * 4),
+                (l * 2 + 1, l * 3, l * 3 + 1, l * 4),
+            ],
+        )
+    }
 }
 
 fn do_move_wrapping(
@@ -376,7 +362,7 @@ fn do_move_wrapping(
 
 fn do_move_cube(
     map: &HashMap<(usize, usize), Tile>,
-    segments: &[(usize, usize, usize, usize); 12],
+    segments: &[Region; 12],
     connections: &[[usize; 5]; 12],
     facing: &mut Direction,
     x: &mut usize,
@@ -384,194 +370,88 @@ fn do_move_cube(
     movement: usize,
 ) {
     for _ in 0..movement {
-        match facing {
-            Direction::Up => match map.get(&(*x, *y - 1)) {
-                None => {
-                    let segment = segments
-                        .iter()
-                        .position(|(min_x, max_x, min_y, max_y)| {
-                            *min_x <= *x && *x <= *max_x && *min_y <= *y && *y <= *max_y
-                        })
-                        .unwrap();
-                    let rel_x = *x - segments[segment].0;
-                    let new_segment = connections[segment][Direction::Up as usize];
-                    let old_facing = *facing;
-                    let new_pos = match connections[new_segment]
-                        .iter()
-                        .position(|d| *d == segment)
-                        .unwrap()
-                    {
-                        0 => {
-                            *facing = Direction::Left;
-                            (segments[new_segment].1, segments[new_segment].3 - rel_x)
+        let segment = segments
+            .iter()
+            .position(|(min_x, max_x, min_y, max_y)| {
+                *min_x <= *x && *x <= *max_x && *min_y <= *y && *y <= *max_y
+            })
+            .unwrap();
+        let new_segment = connections[segment][*facing as usize];
+        let dir = connections[new_segment]
+            .iter()
+            .position(|d| *d == segment)
+            .unwrap();
+        let pos = match facing {
+            Direction::Up => map.get(&(*x, *y - 1)),
+            Direction::Right => map.get(&(*x + 1, *y)),
+            Direction::Down => map.get(&(*x, *y + 1)),
+            Direction::Left => map.get(&(*x - 1, *y)),
+        };
+        let (nx, px, ny, py) = segments[new_segment];
+        match pos {
+            None => {
+                let new_pos = match facing {
+                    Direction::Up => {
+                        let rel_x = *x - segments[segment].0;
+                        match dir {
+                            0 => (px, py - rel_x),
+                            1 => (nx + rel_x, py),
+                            2 => (nx, ny + rel_x),
+                            3 => (px - rel_x, ny),
+                            _ => panic!(),
                         }
-                        1 => {
-                            *facing = Direction::Up;
-                            (segments[new_segment].0 + rel_x, segments[new_segment].3)
-                        }
-                        2 => {
-                            *facing = Direction::Right;
-                            (segments[new_segment].0, segments[new_segment].2 + rel_x)
-                        }
-                        3 => {
-                            *facing = Direction::Down;
-                            (segments[new_segment].1 - rel_x, segments[new_segment].2)
-                        }
-                        _ => panic!(),
-                    };
-                    if map[&new_pos] == Tile::Wall {
-                        *facing = old_facing;
-                        break;
                     }
-                    (*x, *y) = new_pos;
-                }
-                Some(Tile::Wall) => {
+                    Direction::Down => {
+                        let rel_x = *x - segments[segment].0;
+                        match dir {
+                            0 => (px, ny + rel_x),
+                            1 => (px - rel_x, py),
+                            2 => (nx, py - rel_x),
+                            3 => (nx + rel_x, ny),
+                            _ => panic!(),
+                        }
+                    }
+                    Direction::Right => {
+                        let rel_y = *y - segments[segment].2;
+                        match dir {
+                            0 => (px, py - rel_y),
+                            1 => (nx + rel_y, py),
+                            2 => (nx, ny + rel_y),
+                            3 => (px - rel_y, ny),
+                            _ => panic!(),
+                        }
+                    }
+                    Direction::Left => {
+                        let rel_y = *y - segments[segment].2;
+                        match dir {
+                            0 => (px, ny + rel_y),
+                            1 => (px - rel_y, py),
+                            2 => (nx, py - rel_y),
+                            3 => (nx + rel_y, ny),
+                            _ => panic!(),
+                        }
+                    }
+                };
+                if map[&new_pos] == Tile::Wall {
                     break;
                 }
-                Some(Tile::Empty) => {
-                    *y -= 1;
-                }
-            },
-            Direction::Down => match map.get(&(*x, *y + 1)) {
-                None => {
-                    let segment = segments
-                        .iter()
-                        .position(|(min_x, max_x, min_y, max_y)| {
-                            *min_x <= *x && *x <= *max_x && *min_y <= *y && *y <= *max_y
-                        })
-                        .unwrap();
-                    let new_segment = connections[segment][Direction::Down as usize];
-                    let rel_x = *x - segments[segment].0;
-                    let old_facing = *facing;
-                    let new_pos = match connections[new_segment]
-                        .iter()
-                        .position(|d| *d == segment)
-                        .unwrap()
-                    {
-                        0 => {
-                            *facing = Direction::Left;
-                            (segments[new_segment].1, segments[new_segment].2 + rel_x)
-                        }
-                        1 => {
-                            *facing = Direction::Up;
-                            (segments[new_segment].1 - rel_x, segments[new_segment].3)
-                        }
-                        2 => {
-                            *facing = Direction::Right;
-                            (segments[new_segment].0, segments[new_segment].3 - rel_x)
-                        }
-                        3 => {
-                            *facing = Direction::Down;
-                            (segments[new_segment].0 + rel_x, segments[new_segment].2)
-                        }
-                        _ => panic!(),
-                    };
-                    if map[&new_pos] == Tile::Wall {
-                        *facing = old_facing;
-                        break;
-                    }
-                    (*x, *y) = new_pos;
-                }
-                Some(Tile::Wall) => {
-                    break;
-                }
-                Some(Tile::Empty) => {
-                    *y += 1;
-                }
-            },
-            Direction::Right => match map.get(&(*x + 1, *y)) {
-                None => {
-                    let segment = segments
-                        .iter()
-                        .position(|(min_x, max_x, min_y, max_y)| {
-                            *min_x <= *x && *x <= *max_x && *min_y <= *y && *y <= *max_y
-                        })
-                        .unwrap();
-                    let new_segment = connections[segment][Direction::Right as usize];
-                    let rel_y = *y - segments[segment].2;
-                    let old_facing = *facing;
-                    let new_pos = match connections[new_segment]
-                        .iter()
-                        .position(|d| *d == segment)
-                        .unwrap()
-                    {
-                        0 => {
-                            *facing = Direction::Left;
-                            (segments[new_segment].1, segments[new_segment].3 - rel_y)
-                        }
-                        1 => {
-                            *facing = Direction::Up;
-                            (segments[new_segment].0 + rel_y, segments[new_segment].3)
-                        }
-                        2 => {
-                            *facing = Direction::Right;
-                            (segments[new_segment].0, segments[new_segment].2 + rel_y)
-                        }
-                        3 => {
-                            *facing = Direction::Down;
-                            (segments[new_segment].1 - rel_y, segments[new_segment].2)
-                        }
-                        _ => panic!(),
-                    };
-                    if map[&new_pos] == Tile::Wall {
-                        *facing = old_facing;
-                        break;
-                    }
-                    (*x, *y) = new_pos;
-                }
-                Some(Tile::Wall) => {
-                    break;
-                }
-                Some(Tile::Empty) => {
-                    *x += 1;
-                }
-            },
-            Direction::Left => match map.get(&(*x - 1, *y)) {
-                None => {
-                    let segment = segments
-                        .iter()
-                        .position(|(min_x, max_x, min_y, max_y)| {
-                            *min_x <= *x && *x <= *max_x && *min_y <= *y && *y <= *max_y
-                        })
-                        .unwrap();
-                    let new_segment = connections[segment][Direction::Left as usize];
-                    let rel_y = *y - segments[segment].2;
-                    let old_facing = *facing;
-                    let new_pos = match connections[new_segment]
-                        .iter()
-                        .position(|d| *d == segment)
-                        .unwrap()
-                    {
-                        0 => {
-                            *facing = Direction::Left;
-                            (segments[new_segment].1, segments[new_segment].2 + rel_y)
-                        }
-                        1 => {
-                            *facing = Direction::Up;
-                            (segments[new_segment].1 - rel_y, segments[new_segment].3)
-                        }
-                        2 => {
-                            *facing = Direction::Right;
-                            (segments[new_segment].0, segments[new_segment].3 - rel_y)
-                        }
-                        3 => {
-                            *facing = Direction::Down;
-                            (segments[new_segment].0 + rel_y, segments[new_segment].2)
-                        }
-                        _ => panic!(),
-                    };
-                    if map[&new_pos] == Tile::Wall {
-                        *facing = old_facing;
-                        break;
-                    }
-                    (*x, *y) = new_pos;
-                }
-                Some(Tile::Wall) => {
-                    break;
-                }
-                Some(Tile::Empty) => {
-                    *x -= 1;
-                }
+                *facing = match dir {
+                    0 => Direction::Left,
+                    1 => Direction::Up,
+                    2 => Direction::Right,
+                    3 => Direction::Down,
+                    _ => panic!(),
+                };
+                (*x, *y) = new_pos;
+            }
+            Some(Tile::Wall) => {
+                break;
+            }
+            Some(Tile::Empty) => match facing {
+                Direction::Right => *x += 1,
+                Direction::Down => *y += 1,
+                Direction::Left => *x -= 1,
+                Direction::Up => *y -= 1,
             },
         }
     }

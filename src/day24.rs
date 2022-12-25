@@ -26,10 +26,22 @@ pub fn main() -> Result<(usize, usize)> {
         width = line.len();
         for (x, c) in line.chars().enumerate() {
             match c {
-                '>' => blizzards.entry((x, height)).or_default().push(Direction::Right),
-                '<' => blizzards.entry((x, height)).or_default().push(Direction::Left),
-                'v' => blizzards.entry((x, height)).or_default().push(Direction::Down),
-                '^' => blizzards.entry((x, height)).or_default().push(Direction::Up),
+                '>' => blizzards
+                    .entry((x, height))
+                    .or_default()
+                    .push(Direction::Right),
+                '<' => blizzards
+                    .entry((x, height))
+                    .or_default()
+                    .push(Direction::Left),
+                'v' => blizzards
+                    .entry((x, height))
+                    .or_default()
+                    .push(Direction::Down),
+                '^' => blizzards
+                    .entry((x, height))
+                    .or_default()
+                    .push(Direction::Up),
                 _ => {}
             }
         }
@@ -135,10 +147,10 @@ fn find_path(
             ] {
                 if (x, y) == start
                     || (0 < x
-                    && 0 < y
-                    && x < width - 1
-                    && y < height - 1
-                    && blizzards[&(x, y)].is_empty())
+                        && 0 < y
+                        && x < width - 1
+                        && y < height - 1
+                        && blizzards[&(x, y)].is_empty())
                 {
                     next.insert((x, y));
                 }
